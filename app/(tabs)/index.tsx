@@ -1,6 +1,6 @@
 import { products } from '@/data/product';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, Text, Image, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, Text, StyleSheet , View} from 'react-native';
 
 export default function Produtos() {
   return (
@@ -10,7 +10,7 @@ export default function Produtos() {
           key={product.id}
           onPress={() => router.push(`/products/${product.id}`)}
         >
-          <Image></Image>
+        <View>{product.source}</View>
           <Text style={styles.tituloProduto}>{product.name}</Text>
         </Pressable>
       ))}
