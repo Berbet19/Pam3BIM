@@ -6,6 +6,16 @@ import CustomSearchBar from '@/components/searchBar';
 import React, { useState } from 'react';
 import Feather from '@expo/vector-icons/Feather';
 
+const COLORS = {
+  primary: "#E63946",
+  primaryDark: "#B5222C",
+  accent: "#FF8C42",
+  bg: "#F6F3EF",
+  card: "#FFFFFF",
+  textDark: "#2B2B2B",
+  textMuted: "#8A8A8A",
+};
+
 export default function Produtos() {
   const [search, setSearch] = useState('');
 
@@ -17,7 +27,8 @@ export default function Produtos() {
     <View style={styles.screenContainer}>
       <SafeAreaView style={styles.headerSafeArea} edges={['top']}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Meu Header Red</Text>
+          <Text style={styles.headerTitle}>🛒 Meu Carrinho</Text>
+          <Text style={styles.headerSubtitle}>Revise seus itens antes de finalizar</Text>
           <CustomSearchBar
             value={search}
             onChangeText={(text) => setSearch(text)}
@@ -31,14 +42,27 @@ export default function Produtos() {
         keyExtractor={(item) => item.id.toString()}
         style={styles.listArea}
         contentContainerStyle={styles.container}
+        ListHeaderComponent={
+          filteredProducts.length > 0 ? (
+            <Text style={styles.sectionTitle}>Itens selecionados</Text>
+          ) : null
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Feather name="shopping-bag" size={40} color={COLORS.textMuted} />
+            <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <Pressable
-            style={styles.card}
+            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
             onPress={() => router.push(`/products/${item.id}`)}
           >
             {/* 1. Imagem do Produto */}
             {item.source && (
-              <Image style={styles.imagens} source={item.source} />
+              <View style={styles.imageWrapper}>
+                <Image style={styles.imagens} source={item.source} />
+              </View>
             )}
 
             {/* 2. Informações do Produto (Centro) */}
@@ -51,19 +75,35 @@ export default function Produtos() {
 
             {/* 3. Controles Estáticos (Apenas Visual) */}
             <View style={styles.quantityContainer}>
-              <View style={styles.quantityButton}>
-                <Feather name="minus" size={16} color="#333" />
-              </View>
-              
+              <Pressable style={styles.quantityButton}>
+                <Feather name="minus" size={16} color={COLORS.primary} />
+              </Pressable>
+
               <Text style={styles.quantityText}>1</Text>
-              
-              <View style={styles.quantityButton}>
-                <Feather name="plus" size={16} color="#333" />
-              </View>
+
+              <Pressable style={[styles.quantityButton, styles.quantityButtonAdd]}>
+                <Feather name="plus" size={16} color="white" />
+              </Pressable>
             </View>
           </Pressable>
         )}
       />
+
+      {/* Rodapé fixo com o total, mesmo padrão visual da tela de detalhe */}
+      {filteredProducts.length > 0 && (
+        <View style={styles.footerContainer}>
+          <View>
+            <Text style={styles.footerLabel}>Total estimado</Text>
+            <Text style={styles.footerValue}>
+              R$ {filteredProducts.reduce((acc, p) => acc + Number(p.price), 0).toFixed(2)}
+            </Text>
+          </View>
+          <Pressable style={styles.checkoutButton} onPress={() => alert('Ir para pagamento!')}>
+            <Text style={styles.checkoutButtonText}>Finalizar pedido</Text>
+            <Feather name="arrow-right" size={18} color="white" />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -71,34 +111,58 @@ export default function Produtos() {
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: "grey",
+    backgroundColor: COLORS.bg,
   },
   headerSafeArea: {
-    backgroundColor: "red",
+    backgroundColor: COLORS.primary,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 2,
   },
   headerContent: {
-    backgroundColor: "red",
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-    paddingTop: 4,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 8,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    gap: 10,
   },
   headerTitle: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: -4,
   },
   listArea: {
     flex: 1,
   },
   container: {
-    backgroundColor: "grey",
-    padding: 12,
+    backgroundColor: COLORS.bg,
+    padding: 16,
+    paddingBottom: 110, // espaço pro footer fixo
+    flexGrow: 1,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    marginBottom: 12,
   },
   card: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 12,
     flexDirection: 'row',
@@ -106,14 +170,20 @@ const styles = StyleSheet.create({
     gap: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
     elevation: 2,
+  },
+  cardPressed: {
+    opacity: 0.85,
+  },
+  imageWrapper: {
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   imagens: {
     height: 90,
     width: 90,
-    borderRadius: 10,
     resizeMode: 'cover',
   },
   infoContainer: {
@@ -123,42 +193,97 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tituloProduto: {
-    color: "#222",
-    fontWeight: "600",
+    color: COLORS.textDark,
+    fontWeight: "700",
     fontSize: 16,
     lineHeight: 20,
   },
   preco: {
-    color: "green",
-    fontWeight: "bold",
+    color: COLORS.accent,
+    fontWeight: "800",
     fontSize: 16,
   },
   quantityContainer: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    backgroundColor: COLORS.bg,
+    borderRadius: 10,
     paddingVertical: 6,
     paddingHorizontal: 8,
-    gap: 4,
+    gap: 6,
   },
   quantityButton: {
     width: 28,
     height: 28,
     backgroundColor: '#fff',
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#eee',
+  },
+  quantityButtonAdd: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   quantityText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
-    marginVertical: 2,
+    color: COLORS.textDark,
     minWidth: 16,
     textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 60,
+    gap: 10,
+  },
+  emptyText: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  footerLabel: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
+  footerValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.textDark,
+  },
+  checkoutButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    height: 46,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkoutButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

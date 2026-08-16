@@ -8,9 +8,9 @@ import React, { useState, useRef, useEffect } from 'react';
 const { width } = Dimensions.get("window");
 
 const imagesData = [
-  { id: "1", url: "https://unsplash.com" },
-  { id: "2", url: "https://unsplash.com" },
-  { id: "3", url: "https://unsplash.com" },
+  { id: "1", source: require("@/assets/images/burguer.jpg") },
+  { id: "2", source: require("@/assets/images/pizza.jpg") },
+  { id: "3", source: require("@/assets/images/lasanha.jpg") },
 ];
 
 export default function Produtos() {
@@ -23,7 +23,7 @@ export default function Produtos() {
     const timer = setInterval(() => {
       setActiveIndex((prevIndex) => {
         const nextIndex = prevIndex === imagesData.length - 1 ? 0 : prevIndex + 1;
-        scrollRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+        scrollRef.current?.scrollTo({ x: nextIndex * (width - 24), animated: true });
         return nextIndex;
       });
     }, 3000);
@@ -33,7 +33,7 @@ export default function Produtos() {
 
   const handleScroll = (event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffset / width);
+    const index = Math.round(contentOffset / (width - 24));
     setActiveIndex(index);
   };
 
@@ -43,27 +43,21 @@ export default function Produtos() {
 
   return (
     <View style={styles.screenContainer}>
-      {/* Header Vermelho com o componente conectado */}
+      {/* Header maior, com título, busca e banner tudo dentro */}
       <SafeAreaView style={styles.headerSafeArea} edges={['top']}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Meu Header Red</Text>
+          <View style={styles.headerTopRow}>
+            <Text style={styles.headerTitle}>🍔 DeliveryApp</Text>
+            <Text style={styles.headerSubtitle}>Peça já o seu prato favorito!</Text>
+          </View>
+
           <CustomSearchBar
             value={search}
             onChangeText={(text) => setSearch(text)}
             placeholder="Buscar produtos..."
           />
-        </View>
-      </SafeAreaView>
 
-      {/* Lista de Produtos em 2 colunas com o Banner no topo (ListHeaderComponent) */}
-      <FlatList
-        data={filteredProducts}
-        numColumns={2}
-        keyExtractor={(item) => item.id.toString()}
-        style={styles.listArea}
-        contentContainerStyle={styles.container}
-        columnWrapperStyle={styles.row}
-        ListHeaderComponent={
+          {/* Banner agora vive dentro do header */}
           <View style={styles.bannerWrapper}>
             <ScrollView
               ref={scrollRef}
@@ -75,7 +69,8 @@ export default function Produtos() {
             >
               {imagesData.map((item) => (
                 <View key={item.id} style={styles.slide}>
-                  <Image source={{ uri: item.url }} style={styles.bannerImage} />
+                  <Image source={item.source} style={styles.bannerImage} />
+                  <View style={styles.bannerOverlay} />
                 </View>
               ))}
             </ScrollView>
@@ -92,17 +87,40 @@ export default function Produtos() {
               ))}
             </View>
           </View>
+        </View>
+      </SafeAreaView>
+
+      {/* Lista de Produtos em 2 colunas */}
+      <FlatList
+        data={filteredProducts}
+        numColumns={2}
+        keyExtractor={(item) => item.id.toString()}
+        style={styles.listArea}
+        contentContainerStyle={styles.container}
+        columnWrapperStyle={styles.row}
+        ListHeaderComponent={
+          <Text style={styles.sectionTitle}>Mais pedidos</Text>
         }
         renderItem={({ item }) => (
           <Pressable
-            style={styles.card}
+            style={({ pressed }) => [
+              styles.card,
+              pressed && styles.cardPressed,
+            ]}
             onPress={() => router.push(`/products/${item.id}`)}
           >
             {item.source && (
-              <Image style={styles.imagens} source={item.source} />
+              <View style={styles.imageWrapper}>
+                <Image style={styles.imagens} source={item.source} />
+              </View>
             )}
-            <Text style={styles.tituloProduto}>{item.name}</Text>
-            <Text style={styles.preco}>R$ {item.price}</Text>
+            <Text style={styles.tituloProduto} numberOfLines={1}>{item.name}</Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.preco}>R$ {item.price}</Text>
+              <View style={styles.addButton}>
+                <Text style={styles.addButtonText}>+</Text>
+              </View>
+            </View>
           </Pressable>
         )}
       />
@@ -110,39 +128,75 @@ export default function Produtos() {
   );
 }
 
+const COLORS = {
+  primary: "#E63946",     // vermelho principal
+  primaryDark: "#B5222C",
+  accent: "#FF8C42",      // laranja de destaque (preço/CTA)
+  bg: "#F6F3EF",          // fundo levemente quente
+  card: "#FFFFFF",
+  textDark: "#2B2B2B",
+};
+
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: "grey",
+    backgroundColor: COLORS.bg,
   },
   headerSafeArea: {
-    backgroundColor: "red",
+    backgroundColor: COLORS.primary,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    // sombra pra destacar o header do resto da tela
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 2,
   },
   headerContent: {
-    backgroundColor: "red",
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-    paddingTop: 4,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingBottom: 18,
+    paddingTop: 8,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  headerTopRow: {
+    marginBottom: 12,
+    alignItems: 'center',
   },
   headerTitle: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    marginTop: 2,
+    textAlign: 'center',
   },
   listArea: {
     flex: 1,
   },
   container: {
-    padding: 12,
+    padding: 16,
+    paddingTop: 8,
   },
   row: {
-    justifyContent: 'space-between', 
-    marginBottom: 12, 
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    marginVertical: 14,
   },
   bannerWrapper: {
-    marginBottom: 14,
+    marginTop: 14,
     alignItems: 'center',
     width: '100%',
   },
@@ -155,13 +209,18 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     width: '100%',
-    height: 130,
-    borderRadius: 10,
+    height: 150,
+    borderRadius: 16,
     resizeMode: 'cover',
+  },
+  bannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.08)',
   },
   paginationContainer: {
     flexDirection: 'row',
-    marginTop: 6,
+    marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
@@ -171,32 +230,65 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   activeDot: {
-    width: 14,
-    backgroundColor: "red",
+    width: 16,
+    backgroundColor: "white",
   },
   inactiveDot: {
     width: 5,
-    backgroundColor: "white",
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   card: {
-    backgroundColor: "white",
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: 10,
+    gap: 6,
+    width: '48%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardPressed: {
+    opacity: 0.85,
+  },
+  imageWrapper: {
     borderRadius: 10,
-    padding: 8,
-    gap: 5,
-    width: '48%', 
-  },
-  tituloProduto: {
-    color: "red",
-    fontWeight: "bold",
-  },
-  preco: {
-    color: "green",
-    fontWeight: "bold",
+    overflow: 'hidden',
   },
   imagens: {
-    height: 120,
+    height: 110,
     width: '100%',
-    borderRadius: 8,
     resizeMode: 'cover',
+  },
+  tituloProduto: {
+    color: COLORS.textDark,
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  preco: {
+    color: COLORS.accent,
+    fontWeight: "800",
+    fontSize: 15,
+  },
+  addButton: {
+    backgroundColor: COLORS.primary,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonText: {
+    color: 'white',
+    fontWeight: '800',
+    fontSize: 16,
+    marginTop: -2,
   },
 });

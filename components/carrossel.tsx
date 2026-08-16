@@ -1,25 +1,45 @@
 import React, { useRef, useState, useEffect } from "react";
-import { View, ScrollView, Dimensions, Image, StyleSheet } from "react-native";
+import {
+  View,
+  ScrollView,
+  Dimensions,
+  Image,
+  StyleSheet,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
-const BANNER_WIDTH = width * 0.92; // Ocupa a largura ideal parecida com o iFood
+const BANNER_WIDTH = width * 0.92;
 
 const imagesData = [
-  { id: "1", url: "https://unsplash.com" },
-  { id: "2", url: "https://unsplash.com" },
-  { id: "3", url: "https://unsplash.com" },
+  {
+    id: "1",
+    source: require("@/assets/images/burguer.jpg"),
+  },
+  {
+    id: "2",
+    source: require("@/assets/images/pizza.jpg"),
+  },
+  {
+    id: "3",
+    source: require("@/assets/images/lasanha.jpg"),
+  },
 ];
 
 export default function ImageSlider() {
   const scrollRef = useRef<ScrollView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Efeito para o autoplay automático igualzinho ao carrossel antigo
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveIndex((prevIndex) => {
-        const nextIndex = prevIndex === imagesData.length - 1 ? 0 : prevIndex + 1;
-        scrollRef.current?.scrollTo({ x: nextIndex * BANNER_WIDTH, animated: true });
+        const nextIndex =
+          prevIndex === imagesData.length - 1 ? 0 : prevIndex + 1;
+
+        scrollRef.current?.scrollTo({
+          x: nextIndex * width,
+          animated: true,
+        });
+
         return nextIndex;
       });
     }, 3000);
@@ -27,10 +47,10 @@ export default function ImageSlider() {
     return () => clearInterval(timer);
   }, []);
 
-  // Atualiza a bolinha ao arrastar o dedo manualmente
   const handleScroll = (event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffset / BANNER_WIDTH);
+    const index = Math.round(contentOffset / width);
+
     setActiveIndex(index);
   };
 
@@ -42,23 +62,23 @@ export default function ImageSlider() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScroll}
-        contentContainerStyle={styles.scrollContainer}
       >
         {imagesData.map((item) => (
           <View key={item.id} style={styles.slide}>
-            <Image source={{ uri: item.url }} style={styles.image} />
+            <Image source={item.source} style={styles.image} />
           </View>
         ))}
       </ScrollView>
 
-      {/* Paginação de bolinhas moderna e nativa */}
       <View style={styles.paginationContainer}>
         {imagesData.map((_, index) => (
           <View
             key={index}
             style={[
               styles.dot,
-              activeIndex === index ? styles.activeDot : styles.inactiveDot,
+              activeIndex === index
+                ? styles.activeDot
+                : styles.inactiveDot,
             ]}
           />
         ))}
@@ -70,36 +90,39 @@ export default function ImageSlider() {
 const styles = StyleSheet.create({
   wrapper: {
     marginVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  scrollContainer: {
-    alignItems: 'center',
-  },
+
   slide: {
     width: width,
-    alignItems: 'center',
+    alignItems: "center",
   },
+
   image: {
     width: BANNER_WIDTH,
-    height: 150, // Altura perfeita para banners de topo de app
+    height: 150,
     borderRadius: 12,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
+
   paginationContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
   },
+
   dot: {
     height: 6,
     borderRadius: 3,
   },
+
   activeDot: {
     width: 18,
-    backgroundColor: "red", // Bolinha ativa vermelha combinando com seu header
+    backgroundColor: "red",
   },
+
   inactiveDot: {
     width: 6,
     backgroundColor: "gray",
